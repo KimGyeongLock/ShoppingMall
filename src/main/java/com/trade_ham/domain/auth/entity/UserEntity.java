@@ -4,8 +4,8 @@ import com.trade_ham.domain.product.entity.ProductEntity;
 import com.trade_ham.global.common.enums.Provider;
 import com.trade_ham.global.common.enums.Role;
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
+import org.hibernate.annotations.BatchSize;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -13,6 +13,10 @@ import java.util.List;
 @Getter
 @Setter
 @Entity
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@BatchSize(size = 10)
 public class UserEntity {
 
     @Id

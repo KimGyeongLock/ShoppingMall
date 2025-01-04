@@ -83,7 +83,7 @@ public class SellProductService {
     public List<ProductResponseDTO> findAllSellProducts(Long userId) {
         String userLikedProductsKey = USER_LIKED_PRODUCTS_KEY_PREFIX + userId;
 
-        List<ProductEntity> productEntities = productRepository.findByStatusOrderByCreatedAtDesc(ProductStatus.SELL);
+        List<ProductEntity> productEntities = productRepository.findByStatusOrderByCreatedAtDescWithFetchJoin(ProductStatus.SELL);
 
         Set<String> likedProductIds = redisSetTemplate.opsForSet().members(userLikedProductsKey);
 
