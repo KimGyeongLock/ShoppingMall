@@ -46,7 +46,7 @@ public class SellProductController {
     // 상태가 SELL인 전체 판매 물품 최신순으로 조회
     // 필요한 데이터만 전달
     @GetMapping("/all")
-    public ApiResponse<List<ProductResponseDTO>> findAllSellProducts(@AuthenticationPrincipal Long userId) {
+    public ApiResponse<List<ProductResponseDTO>> findAllSellProducts(@AuthenticationPrincipal Long userId) { //userId가 왜 전달되는지 모르겠음 :: roki
         List<ProductResponseDTO> products = sellProductService.findAllSellProducts(userId);
 
         return ApiResponse.success(products);

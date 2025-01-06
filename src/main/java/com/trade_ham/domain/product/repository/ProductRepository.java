@@ -33,7 +33,11 @@ public interface ProductRepository extends JpaRepository<ProductEntity, Long> {
             "ORDER BY p.createdAt DESC")
     List<ProductEntity> searchProducts(@Param("keyword") String keyword);
 
-    @Query("SELECT p FROM ProductEntity p JOIN FETCH p.seller WHERE p.status = :status ORDER BY p.createdAt DESC")
+    @Query("SELECT p FROM ProductEntity p " +
+            "LEFT JOIN FETCH p.seller " +
+            "LEFT JOIN FETCH p.buyer " +
+            "LEFT JOIN FETCH p.lockerEntity " +
+            "WHERE p.status = :status ORDER BY p.createdAt DESC")
     List<ProductEntity> findByStatusOrderByCreatedAtDescWithFetchJoin(@Param("status") ProductStatus status);
 
 //    @EntityGraph(attributePaths = {"seller"})
