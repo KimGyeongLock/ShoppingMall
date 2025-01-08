@@ -19,8 +19,11 @@ public interface ProductRepository extends JpaRepository<ProductEntity, Long> {
     Optional<ProductEntity> findByProductId(Long productId);
     List<ProductEntity> findByNameContainingIgnoreCase(String name);
     List<ProductEntity> findBySeller(UserEntity seller);
-    List<ProductEntity> findByBuyer(UserEntity buyer);
-//    List<ProductEntity> findByStatusOrderByCreatedAtDesc(ProductStatus status);
+    @Query("SELECT p FROM ProductEntity p " +
+            "JOIN FETCH p.seller " +
+            "WHERE p.buyer.id = :buyerId")
+    List<ProductEntity> findByBuyerWithFetchJoin(@Param("buyerId") Long buyerId);
+    List<ProductEntity> findByStatusOrderByCreatedAtDesc(ProductStatus status);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT p FROM ProductEntity p WHERE p.productId = :productId")

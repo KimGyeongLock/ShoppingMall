@@ -16,7 +16,6 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@BatchSize(size = 10)
 public class UserEntity {
 
     @Id

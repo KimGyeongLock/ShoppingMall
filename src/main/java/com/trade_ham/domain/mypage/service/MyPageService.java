@@ -25,7 +25,7 @@ public class MyPageService {
     public List<ProductEntity> findProductsByBuyer(Long buyerId) {
         UserEntity buyer = userRepository.findById(buyerId)
                 .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.USER_NOT_FOUND));
-        return productRepository.findByBuyer(buyer);
+        return productRepository.findByBuyerWithFetchJoin(buyer.getId());
     }
 
     // 판매자 판매 내역 관리

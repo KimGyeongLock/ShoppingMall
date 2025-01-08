@@ -23,7 +23,6 @@ public class ProductEntity extends BaseEntity {
     private Long productId;
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "seller_id")
-//    @BatchSize(size = 10) // 한 번에 최대 10개의 seller를 배치로 로드
     private UserEntity seller;
 
     @ManyToOne(fetch = FetchType.LAZY)

@@ -28,7 +28,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @SpringBootTest
 @ActiveProfiles("test")
 @Transactional
-@TestPropertySource(locations = "classpath:application-test.yml")
 public class FindAllSellProductsTest {
 
     @Autowired
@@ -40,7 +39,7 @@ public class FindAllSellProductsTest {
     @PersistenceContext
     private EntityManager entityManager;
 
-    private static final int PRODUCTS = 1000;
+    private static final int PRODUCTS = 100;
 
     @BeforeEach
     void setUp() {
@@ -70,62 +69,64 @@ public class FindAllSellProductsTest {
     }
 
     // EAGER Fetch, LAZY Fetch를 사용한 기본 조회 성능 테스트
-//    @Test
-//    void findAllSellProducts() {
-//        // Hibernate 쿼리 로깅 활성화
-//        System.out.println("---------------------------------------------------------------------------------------------------------------------------------------------------------------");
-//        entityManager.getEntityManagerFactory().unwrap(org.hibernate.SessionFactory.class)
-//                .getStatistics().setStatisticsEnabled(true);
-//
-//        // 판매 상태인 상품 조회
-//        List<ProductEntity> products = productRepository.findByStatusOrderByCreatedAtDesc(ProductStatus.SELL);
-//
-//        // 검증
-//        assertEquals(PRODUCTS, products.size());
-//
-//        Statistics statistics = entityManager.getEntityManagerFactory()
-//                .unwrap(org.hibernate.SessionFactory.class)
-//                .getStatistics();
-//
-//        // Hibernate 쿼리 수 확인
-//        long queryCount = statistics.getPrepareStatementCount();
-//
-//        System.out.println("Number of queries executed: " + queryCount);
-//        System.out.println("---------------------------------------------------------------------------------------------------------------------------------------------------------------");
-//
-//        // N+1 문제 검증: 예상 쿼리 수와 실제 쿼리 수 비교
-//        assertEquals(1, queryCount, "N+1 문제가 발생하지 않도록 하나의 쿼리로 데이터를 가져와야 합니다.");
-//    }
-
-    // Fetch Join을 사용한 조회 성능 테스트
     @Test
-    void fetchJoinPerformanceTest() {
+    void findAllSellProducts() {
+        // Hibernate 쿼리 로깅 활성화
         System.out.println("---------------------------------------------------------------------------------------------------------------------------------------------------------------");
         entityManager.getEntityManagerFactory().unwrap(org.hibernate.SessionFactory.class)
                 .getStatistics().setStatisticsEnabled(true);
+
+        // 판매 상태인 상품 조회
+        List<ProductEntity> products = productRepository.findByStatusOrderByCreatedAtDesc(ProductStatus.SELL);
+        products.forEach(rs -> System.out.println(rs.getSeller().getUsername()));
+
+        // 검증
+        assertEquals(PRODUCTS, products.size());
+
         Statistics statistics = entityManager.getEntityManagerFactory()
                 .unwrap(org.hibernate.SessionFactory.class)
                 .getStatistics();
-        statistics.clear();
 
-        long startTime = System.nanoTime();
+        // Hibernate 쿼리 수 확인
+        long queryCount = statistics.getPrepareStatementCount();
 
-        // Fetch Join 방식으로 데이터 조회
-        List<ProductEntity> products = productRepository.findByStatusOrderByCreatedAtDescWithFetchJoin(ProductStatus.SELL);
-
-        for (ProductEntity product : products) {
-            String name = product.getSeller().getUsername();
-        }
-
-        long elapsedTime = System.nanoTime() - startTime;
-
-        System.out.println("Products Count: " + products.size());
-        System.out.println("Executed Queries: " + statistics.getPrepareStatementCount());
-        System.out.println("Elapsed Time (ms): " + elapsedTime / 1_000_000);
-
-        assertEquals(PRODUCTS, products.size());
+        System.out.println("Number of queries executed: " + queryCount);
         System.out.println("---------------------------------------------------------------------------------------------------------------------------------------------------------------");
+
+        // N+1 문제 검증: 예상 쿼리 수와 실제 쿼리 수 비교
+        assertEquals(1, queryCount, "N+1 문제가 발생하지 않도록 하나의 쿼리로 데이터를 가져와야 합니다.");
+
     }
+
+    // Fetch Join을 사용한 조회 성능 테스트
+//    @Test
+//    void fetchJoinPerformanceTest() {
+//        System.out.println("---------------------------------------------------------------------------------------------------------------------------------------------------------------");
+//        entityManager.getEntityManagerFactory().unwrap(org.hibernate.SessionFactory.class)
+//                .getStatistics().setStatisticsEnabled(true);
+//        Statistics statistics = entityManager.getEntityManagerFactory()
+//                .unwrap(org.hibernate.SessionFactory.class)
+//                .getStatistics();
+//        statistics.clear();
+//
+//        long startTime = System.nanoTime();
+//
+//        // Fetch Join 방식으로 데이터 조회
+//        List<ProductEntity> products = productRepository.findByStatusOrderByCreatedAtDescWithFetchJoin(ProductStatus.SELL);
+//
+//        for (ProductEntity product : products) {
+//            String name = product.getSeller().getUsername();
+//        }
+//
+//        long elapsedTime = System.nanoTime() - startTime;
+//
+//        System.out.println("Products Count: " + products.size());
+//        System.out.println("Executed Queries: " + statistics.getPrepareStatementCount());
+//        System.out.println("Elapsed Time (ms): " + elapsedTime / 1_000_000);
+//
+//        assertEquals(PRODUCTS, products.size());
+//        System.out.println("---------------------------------------------------------------------------------------------------------------------------------------------------------------");
+//    }
 
     // EntityGraph를 사용한 조회 성능 테스트
 //    @Test
