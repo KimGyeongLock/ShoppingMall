@@ -1,8 +1,7 @@
-package com.trade_ham.domain.mypage.service;
+package com.trade_ham.domain.product.service;
 
 import com.trade_ham.domain.auth.entity.UserEntity;
 import com.trade_ham.domain.auth.repository.UserRepository;
-import com.trade_ham.domain.mypage.service.MyPageService;
 import com.trade_ham.domain.product.dto.ProductResponseDTO;
 import com.trade_ham.domain.product.entity.ProductEntity;
 import com.trade_ham.domain.product.entity.ProductStatus;
@@ -15,6 +14,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.redis.core.SetOperations;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.util.List;
@@ -24,10 +25,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @SpringBootTest
 @Transactional
 @ActiveProfiles("test")
-public class FindProductsBySellerTest {
+public class ViewLikeProductServiceTest {
 
     @Autowired
-    private MyPageService myPageService;
+    private ViewLikeProductService viewLikeProductService;
 
     @Autowired
     private UserRepository userRepository;
@@ -35,56 +36,62 @@ public class FindProductsBySellerTest {
     @Autowired
     private ProductRepository productRepository;
 
+    @Autowired
+    private StringRedisTemplate redisTemplate;
+
     @PersistenceContext
     private EntityManager entityManager;
 
     private static final int PRODUCTS = 10;
+    private static final Long USER_ID = 1L;
 
     @BeforeEach
     void setUp() {
-        // 판매자가 판매한 상품 10개 생성
-        createTestProductsForSeller(PRODUCTS);
+        // Mock Redis에 좋아요한 상품 ID 저장
+        mockLikedProductsInRedis();
+
+        // 상품 데이터 생성
+        createTestProducts(PRODUCTS);
 
         // 영속성 컨텍스트 초기화
         entityManager.clear();
     }
 
-    private void createTestProductsForSeller(int count) {
+    private void createTestProducts(int count) {
         UserEntity seller = UserEntity.builder()
                 .username("test_seller")
                 .build();
         userRepository.save(seller);
 
         for (int i = 1; i <= count; i++) {
-            ProductEntity.ProductEntityBuilder productBuilder = ProductEntity.builder()
+            ProductEntity product = ProductEntity.builder()
                     .name("Product " + i)
                     .description("Description for product " + i)
                     .price(3000L)
                     .status(ProductStatus.SELL)
-                    .seller(seller);
+                    .seller(seller)
+                    .build();
+            productRepository.save(product);
+        }
+    }
 
-            // 짝수 번째일 경우 buyer를 추가
-            if (i % 2 == 0) {
-                UserEntity buyer = UserEntity.builder()
-                        .username("test_user_" + i)
-                        .build();
-                userRepository.save(buyer);
-                productBuilder.buyer(buyer);
-            }
-
-            productRepository.save(productBuilder.build());
+    private void mockLikedProductsInRedis() {
+        SetOperations<String, String> setOperations = redisTemplate.opsForSet();
+        String userLikedProductsKey = "user:like:products:" + USER_ID;
+        for (int i = 1; i <= PRODUCTS; i++) {
+            setOperations.add(userLikedProductsKey, String.valueOf(i));
         }
     }
 
     @Test
-    void findProductsBySeller_shouldNotHaveNPlusOneProblem() {
+    void findUserLikeProducts_shouldNotHaveNPlusOneProblem() {
         // Hibernate 쿼리 통계 활성화
         System.out.println("---------------------------------------------------------------------------------------------------------------------------------------------------------------");
         entityManager.getEntityManagerFactory().unwrap(org.hibernate.SessionFactory.class)
                 .getStatistics().setStatisticsEnabled(true);
 
-        // 판매자가 판매한 상품 조회
-        List<ProductResponseDTO> products = myPageService.findProductsBySeller(1L);
+        // 사용자가 좋아요한 상품 조회
+        List<ProductResponseDTO> products = viewLikeProductService.findUserLikeProducts(USER_ID);
         products.forEach(product -> System.out.println(product.getName()));
 
         // 검증: 상품 개수

@@ -25,7 +25,7 @@ public class MyPageService {
     public List<ProductEntity> findProductsByBuyer(Long buyerId) {
         UserEntity buyer = userRepository.findById(buyerId)
                 .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.USER_NOT_FOUND));
-        return productRepository.findByBuyerWithFetchJoin(buyer.getId());
+        return productRepository.findByBuyerWithFetchJoin(buyer.getId()); // findProductsBySeller 에만 ProductResponseDTO로 type casting?
     }
 
     // 판매자 판매 내역 관리
